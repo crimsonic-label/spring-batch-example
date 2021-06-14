@@ -1,0 +1,10 @@
+version: '3'
+services:
+  postgres:
+    image: 'postgres:latest'
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres # The PostgreSQL user (useful to connect to the database)
+      POSTGRES_PASSWORD: p12345 # The PostgreSQL password (useful to connect to the database)
+      POSTGRES_DB: spring_batch # The PostgreSQL default database (automatically created at first launch)
