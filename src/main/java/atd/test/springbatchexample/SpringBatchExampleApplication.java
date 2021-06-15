@@ -36,7 +36,7 @@ public class SpringBatchExampleApplication {
         DefaultJobParametersValidator validator = new DefaultJobParametersValidator(
                 new String[]{"fileName"},
                 // accept run.id parameter created by incrementer
-                new String[]{"name", "run.id"});
+                new String[]{"name", "currentDate"});
         validator.afterPropertiesSet();
         return validator;
     }
@@ -58,9 +58,11 @@ public class SpringBatchExampleApplication {
      */
     @StepScope
     @Bean
-    public Tasklet helloWorldTasklet(@Value("#{jobParameters['name']}") String name) {
+    public Tasklet helloWorldTasklet(@Value("#{jobParameters['name']}") String name,
+                                     @Value("#{jobParameters['fileName']}") String fileName) {
         return (stepContribution, chunkContext) -> {
             System.out.printf("Hello %s!%n", name);
+            System.out.printf("file name is %s!%n", fileName);
             return RepeatStatus.FINISHED;
         };
     }
@@ -68,13 +70,13 @@ public class SpringBatchExampleApplication {
     @Bean
     public Step step() {
         return stepBuilderFactory.get("step1")
-                .tasklet(helloWorldTasklet(null)).build();
+                .tasklet(helloWorldTasklet(null, null)).build();
     }
 
     @Bean
     public Job job() throws Exception {
         return jobBuilderFactory.get("basicJob")
-                .incrementer(new RunIdIncrementer())
+                .incrementer(new DailyJobTimestamper())
                 .start(step())
                 .validator(compositeValidator())
                 .build();
