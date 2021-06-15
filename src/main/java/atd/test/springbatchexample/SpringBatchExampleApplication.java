@@ -9,6 +9,7 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.CompositeJobParametersValidator;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +30,23 @@ public class SpringBatchExampleApplication {
     private StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Step step() {
-        return stepBuilderFactory.get("step1")
-                .tasklet(helloWorldTasklet(null)).build();
+    public JobParametersValidator defaultValidator() {
+        // only parameter existence is to be checked with DefaultJobParametersValidator
+        // no other parameters are allowed, only fileName and name
+        DefaultJobParametersValidator validator = new DefaultJobParametersValidator(
+                new String[]{"fileName"},
+                // accept run.id parameter created by incrementer
+                new String[]{"name", "run.id"});
+        validator.afterPropertiesSet();
+        return validator;
+    }
+
+    @Bean
+    public JobParametersValidator compositeValidator() throws Exception {
+        CompositeJobParametersValidator validator = new CompositeJobParametersValidator();
+        validator.setValidators(Arrays.asList(new ParametersValidator(), defaultValidator()));
+        validator.afterPropertiesSet();
+        return validator;
     }
 
     /**
@@ -51,29 +66,18 @@ public class SpringBatchExampleApplication {
     }
 
     @Bean
-    public Job job() {
+    public Step step() {
+        return stepBuilderFactory.get("step1")
+                .tasklet(helloWorldTasklet(null)).build();
+    }
+
+    @Bean
+    public Job job() throws Exception {
         return jobBuilderFactory.get("basicJob")
+                .incrementer(new RunIdIncrementer())
                 .start(step())
                 .validator(compositeValidator())
                 .build();
-    }
-
-    @Bean
-    public JobParametersValidator defaultValidator() {
-        // only parameter existence is to be checked with DefaultJobParametersValidator
-        DefaultJobParametersValidator validator = new DefaultJobParametersValidator();
-        // no other parameters are allowed, only fileName and name
-        validator.setRequiredKeys(new String[] {"fileName"});
-        validator.setOptionalKeys(new String[] {"name"});
-        validator.afterPropertiesSet();
-        return validator;
-    }
-
-    @Bean
-    public JobParametersValidator compositeValidator() {
-        CompositeJobParametersValidator validator = new CompositeJobParametersValidator();
-        validator.setValidators(Arrays.asList(new ParametersValidator(), defaultValidator()));
-        return validator;
     }
 
     /**
@@ -84,5 +88,4 @@ public class SpringBatchExampleApplication {
     public static void main(String[] args) {
         SpringApplication.run(SpringBatchExampleApplication.class, args);
     }
-
 }
