@@ -3,12 +3,14 @@ package atd.test.springbatchexample;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParametersValidator;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.CompositeJobParametersValidator;
 import org.springframework.batch.core.job.DefaultJobParametersValidator;
+import org.springframework.batch.core.listener.ExecutionContextPromotionListener;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,27 +51,26 @@ public class SpringBatchExampleApplication {
     }
 
     /**
-     * step scope enables late binding of job parameters
-     * bean is created until are in scope of an execution
+     * promotion listener look for key "name" in step's execution context
+     * when it is found after the step is successfully completed,
+     * it will be copied into job execution context.
+     * When not found, nothing happens
      *
-     * @param name job parameter taken from command line argument (or other sources)
-     * @return tasklet
+     * @return the listener
      */
-    @StepScope
     @Bean
-    public Tasklet helloWorldTasklet(@Value("#{jobParameters['name']}") String name,
-                                     @Value("#{jobParameters['fileName']}") String fileName) {
-        return (stepContribution, chunkContext) -> {
-            System.out.printf("Hello %s!%n", name);
-            System.out.printf("file name is %s!%n", fileName);
-            return RepeatStatus.FINISHED;
-        };
+    public StepExecutionListener promotionListener() {
+        ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
+        listener.setKeys(new String[] {"name"});
+        return listener;
     }
 
     @Bean
     public Step step() {
         return stepBuilderFactory.get("step1")
-                .tasklet(helloWorldTasklet(null, null)).build();
+                .tasklet(new HelloWorldTasklet())
+                .listener(promotionListener())
+                .build();
     }
 
     @Bean
