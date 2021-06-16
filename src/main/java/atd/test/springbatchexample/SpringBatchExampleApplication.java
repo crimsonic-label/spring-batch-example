@@ -7,12 +7,20 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.step.tasklet.SystemCommandTasklet;
+import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.item.file.builder.FlatFileItemWriterBuilder;
+import org.springframework.batch.item.file.mapping.PassThroughLineMapper;
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.io.Resource;
 
 @EnableBatchProcessing
 @SpringBootApplication
@@ -26,28 +34,44 @@ public class SpringBatchExampleApplication {
     private StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Job collableJob() {
-        return jobBuilderFactory.get("callableStep")
+    public Job job() {
+        return jobBuilderFactory.get("job")
                 .incrementer(new DailyJobTimestamper())
-                .start(callableStep())
+                .start(step1())
                 .build();
     }
 
     @Bean
-    public Step callableStep() {
-        return stepBuilderFactory.get("callableStep")
-                .tasklet(commandTasklet())
+    public Step step1() {
+        return stepBuilderFactory.get("step1")
+                .<String, String>chunk(10)
+                .reader(itemReader(null))
+                .processor((ItemProcessor<String, String>) s -> {
+                    logger.info(s);
+                    return s;
+                })
+                .writer(itemWriter(null))
                 .build();
     }
 
     @Bean
-    public SystemCommandTasklet commandTasklet() {
-        SystemCommandTasklet systemCommandTasklet = new SystemCommandTasklet();
-        systemCommandTasklet.setCommand("ls -la");
-        systemCommandTasklet.setTimeout(5000);
-        systemCommandTasklet.setInterruptOnCancel(true);
-        systemCommandTasklet.setTaskExecutor(new SimpleAsyncTaskExecutor());
-        return systemCommandTasklet;
+    @StepScope
+    public FlatFileItemReader<String> itemReader(@Value("#{jobParameters['inputFile']}") Resource inputFile) {
+        return new FlatFileItemReaderBuilder<String>()
+                .name("itemReader")
+                .resource(inputFile)
+                .lineMapper(new PassThroughLineMapper())
+                .build();
+    }
+
+    @Bean
+    @StepScope
+    public FlatFileItemWriter<String> itemWriter(@Value("#{jobParameters['outputFile']}") Resource outputFile) {
+        return new FlatFileItemWriterBuilder<String>()
+                .name("itemWriter")
+                .resource(outputFile)
+                .lineAggregator(new PassThroughLineAggregator<>())
+                .build();
     }
 
     /**
