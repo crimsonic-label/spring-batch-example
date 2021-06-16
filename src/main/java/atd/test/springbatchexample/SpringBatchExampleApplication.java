@@ -7,14 +7,12 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.step.tasklet.CallableTaskletAdapter;
-import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.batch.core.step.tasklet.SystemCommandTasklet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-
-import java.util.concurrent.Callable;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 @EnableBatchProcessing
 @SpringBootApplication
@@ -38,22 +36,18 @@ public class SpringBatchExampleApplication {
     @Bean
     public Step callableStep() {
         return stepBuilderFactory.get("callableStep")
-                .tasklet(callableTasklet())
+                .tasklet(commandTasklet())
                 .build();
     }
 
     @Bean
-    public CallableTaskletAdapter callableTasklet() {
-        CallableTaskletAdapter callableTaskletAdapter = new CallableTaskletAdapter();
-        callableTaskletAdapter.setCallable(callableObject());
-        return callableTaskletAdapter;
-    }
-
-    private Callable<RepeatStatus> callableObject() {
-        return () -> {
-            logger.info("This is run in another thread: {}", Thread.currentThread().getName());
-            return RepeatStatus.FINISHED;
-        };
+    public SystemCommandTasklet commandTasklet() {
+        SystemCommandTasklet systemCommandTasklet = new SystemCommandTasklet();
+        systemCommandTasklet.setCommand("ls -la");
+        systemCommandTasklet.setTimeout(5000);
+        systemCommandTasklet.setInterruptOnCancel(true);
+        systemCommandTasklet.setTaskExecutor(new SimpleAsyncTaskExecutor());
+        return systemCommandTasklet;
     }
 
     /**
