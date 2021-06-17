@@ -11,7 +11,6 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.support.ListItemReader;
 import org.springframework.batch.repeat.CompletionPolicy;
 import org.springframework.batch.repeat.policy.CompositeCompletionPolicy;
-import org.springframework.batch.repeat.policy.SimpleCompletionPolicy;
 import org.springframework.batch.repeat.policy.TimeoutTerminationPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -47,13 +46,14 @@ public class SpringBatchExampleApplication {
                 .<String, String>chunk(completionPolicy())
                 .reader(itemReader())
                 .writer(itemWriter())
+                .listener(new LoggingStepStartStopListener())
                 .build();
     }
 
     @Bean
     public CompletionPolicy completionPolicy() {
         CompositeCompletionPolicy policy = new CompositeCompletionPolicy();
-        policy.setPolicies( new CompletionPolicy[] {
+        policy.setPolicies(new CompletionPolicy[]{
                 new RandomChunkSizePolicy(),
                 //new SimpleCompletionPolicy(1000),
                 new TimeoutTerminationPolicy(1)
