@@ -31,3 +31,16 @@ connect to database
 
 `/c`
 
+---
+
+Queries:
+
+`select step_execution_id, step_name, job_execution_id, status, exit_code from batch_step_execution order by step_execution_id desc limit 5;`
+
+`select job_execution_id, job_instance_id, status, exit_code from batch_job_execution order by job_execution_id desc limit 5;`
+
+`select s.step_execution_id, s.step_name, s.job_execution_id, s.status, s.exit_code, j.job_instance_id, j.status, j.exit_code 
+from batch_step_execution s
+inner join batch_job_execution j on s.job_execution_id = j.job_execution_id
+where j.job_execution_id = (select job_execution_id from batch_step_execution order by job_execution_id desc limit 1)
+order by s.step_execution_id desc`
