@@ -2,12 +2,12 @@ package atd.test.springbatchexample;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.flow.FlowExecutionStatus;
+import org.springframework.batch.core.job.flow.JobExecutionDecider;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -21,6 +21,7 @@ import java.util.Random;
 public class SpringBatchExampleApplication {
 
     Logger logger = LoggerFactory.getLogger(SpringBatchExampleApplication.class);
+    private Random random = new Random();
 
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
@@ -32,7 +33,8 @@ public class SpringBatchExampleApplication {
         return jobBuilderFactory.get("conditionalJob")
                 .incrementer(new DailyJobTimestamper())
                 .start(firstStep())
-                .on(ExitStatus.FAILED.getExitCode()).to(failureStep())
+                .next(decider())
+                .from(decider()).on(ExitStatus.FAILED.getExitCode()).to(failureStep())
                 .from(firstStep()).on("*").to(successStep())
                 .end()
                 .build();
@@ -40,17 +42,17 @@ public class SpringBatchExampleApplication {
 
     @Bean
     public Step firstStep() {
-        Random random = new Random();
-
-        return stepBuilderFactory.get("firstStep")
-                .tasklet((contribution, chunkContext) -> {
-                    if(random.nextBoolean()) {
-                        return RepeatStatus.FINISHED;
-                    }
-                    throw new RuntimeException("This is failure");
-                })
+        return stepBuilderFactory.get("deciderStep")
+                .tasklet((contribution, chunkContext) -> RepeatStatus.FINISHED)
                 .build();
     }
+
+    @Bean
+    public JobExecutionDecider decider() {
+        return (jobExecution, stepExecution) ->
+                random.nextBoolean() ? FlowExecutionStatus.COMPLETED : FlowExecutionStatus.FAILED;
+    }
+
 
     @Bean
     public Step successStep() {
