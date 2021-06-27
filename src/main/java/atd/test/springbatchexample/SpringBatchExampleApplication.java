@@ -7,6 +7,8 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -28,46 +30,59 @@ public class SpringBatchExampleApplication {
     private StepBuilderFactory stepBuilderFactory;
 
     @Bean
+    public Flow preProcessingFlow() {
+        return new FlowBuilder<Flow>("preProcessingFlow")
+                .start(loadFileStep())
+                .next(loadCustomerStep())
+                .next(updateStartStep())
+                .build();
+    }
+
+    @Bean
     public Job job() {
-        return jobBuilderFactory.get("endStatusTestJob")
+        return jobBuilderFactory.get("flowJob")
                 .incrementer(new DailyJobTimestamper())
-                // first step ended with failure
-                //  job status ABANDONED, exit code FAILED, job status STOPPED, job exit code: STOPPED
-                .start(firstStep())
-                .on("FAILED").stopAndRestart(successStep())
-                // running the second time job skips to success step (with error message that the fist step is not restartable)
-                //  then job status COMPLETED, exit code COMPLETED, job status COMPLETED, job exit code: COMPLETED
-                .from(firstStep()).on("*").to(successStep())
-                .end()
+                .start(preProcessingFlow())
+                .next(runBatch())
+                 .end()
                 .build();
     }
 
     @Bean
-    public Step firstStep() {
-        return stepBuilderFactory.get("firstStep")
+    public Step loadFileStep() {
+        return stepBuilderFactory.get("loadFileStep")
                 .tasklet((contribution, chunkContext) -> {
-                    logger.info("pass step!");
-                    //return RepeatStatus.FINISHED;
-                    throw new RuntimeException("Causing a failure");
-                })
-                .build();
-    }
-
-    @Bean
-    public Step successStep() {
-        return stepBuilderFactory.get("successStep")
-                .tasklet((contribution, chunkContext) -> {
-                    logger.info("Success!");
+                    logger.info("The stock file has been loaded");
                     return RepeatStatus.FINISHED;
                 })
                 .build();
     }
 
     @Bean
-    public Step failureStep() {
-        return stepBuilderFactory.get("failureStep")
+    public Step loadCustomerStep() {
+        return stepBuilderFactory.get("loadCustomerStep")
                 .tasklet((contribution, chunkContext) -> {
-                    logger.warn("Failure");
+                    logger.info("The customer file has been loaded");
+                    return RepeatStatus.FINISHED;
+                })
+                .build();
+    }
+
+    @Bean
+    public Step updateStartStep() {
+        return stepBuilderFactory.get("updateStartStep")
+                .tasklet((contribution, chunkContext) -> {
+                    logger.warn("The start has been updated");
+                    return RepeatStatus.FINISHED;
+                })
+                .build();
+    }
+
+    @Bean
+    public Step runBatch() {
+        return stepBuilderFactory.get("runBatch")
+                .tasklet((contribution, chunkContext) -> {
+                    logger.warn("The batch has been run");
                     return RepeatStatus.FINISHED;
                 })
                 .build();
