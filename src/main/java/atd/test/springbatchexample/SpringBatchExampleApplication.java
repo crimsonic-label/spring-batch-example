@@ -7,6 +7,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.repeat.RepeatStatus;
@@ -15,19 +16,18 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.util.Random;
-
 @EnableBatchProcessing
 @SpringBootApplication
 public class SpringBatchExampleApplication {
 
     Logger logger = LoggerFactory.getLogger(SpringBatchExampleApplication.class);
-    private Random random = new Random();
 
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
+    @Autowired
+    private JobExplorer jobExplorer;
 
     @Bean
     public Flow preProcessingFlow() {
@@ -43,8 +43,9 @@ public class SpringBatchExampleApplication {
         return jobBuilderFactory.get("flowJob")
                 .incrementer(new DailyJobTimestamper())
                 .start(preProcessingFlow())
+                .next(explorerStep())
                 .next(runBatch())
-                 .end()
+                .end()
                 .build();
     }
 
@@ -85,6 +86,13 @@ public class SpringBatchExampleApplication {
                     logger.warn("The batch has been run");
                     return RepeatStatus.FINISHED;
                 })
+                .build();
+    }
+
+    @Bean
+    public Step explorerStep() {
+        return stepBuilderFactory.get("exploringStep")
+                .tasklet(new ExploringTasklet(this.jobExplorer))
                 .build();
     }
 
