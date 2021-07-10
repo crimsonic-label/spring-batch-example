@@ -1,16 +1,12 @@
 package atd.test.springbatchexample;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.explore.JobExplorer;
-import org.springframework.batch.core.job.builder.FlowBuilder;
-import org.springframework.batch.core.job.flow.Flow;
-import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,9 +14,8 @@ import org.springframework.context.annotation.Bean;
 
 @EnableBatchProcessing
 @SpringBootApplication
+@Slf4j
 public class SpringBatchExampleApplication {
-
-    Logger logger = LoggerFactory.getLogger(SpringBatchExampleApplication.class);
 
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
@@ -29,63 +24,19 @@ public class SpringBatchExampleApplication {
     @Autowired
     private JobExplorer jobExplorer;
 
-    @Bean
-    public Flow preProcessingFlow() {
-        return new FlowBuilder<Flow>("preProcessingFlow")
-                .start(loadFileStep())
-                .next(loadCustomerStep())
-                .next(updateStartStep())
-                .build();
-    }
-
+    /**
+     * Job can be started with application when
+     * spring.batch.job.enabled=true
+     * and
+     * spring.batch.job.names=job
+     *
+     * @return the job
+     */
     @Bean
     public Job job() {
-        return jobBuilderFactory.get("flowJob")
+        return jobBuilderFactory.get("job")
                 .incrementer(new DailyJobTimestamper())
-                .start(preProcessingFlow())
-                .next(explorerStep())
-                .next(runBatch())
-                .end()
-                .build();
-    }
-
-    @Bean
-    public Step loadFileStep() {
-        return stepBuilderFactory.get("loadFileStep")
-                .tasklet((contribution, chunkContext) -> {
-                    logger.info("The stock file has been loaded");
-                    return RepeatStatus.FINISHED;
-                })
-                .build();
-    }
-
-    @Bean
-    public Step loadCustomerStep() {
-        return stepBuilderFactory.get("loadCustomerStep")
-                .tasklet((contribution, chunkContext) -> {
-                    logger.info("The customer file has been loaded");
-                    return RepeatStatus.FINISHED;
-                })
-                .build();
-    }
-
-    @Bean
-    public Step updateStartStep() {
-        return stepBuilderFactory.get("updateStartStep")
-                .tasklet((contribution, chunkContext) -> {
-                    logger.warn("The start has been updated");
-                    return RepeatStatus.FINISHED;
-                })
-                .build();
-    }
-
-    @Bean
-    public Step runBatch() {
-        return stepBuilderFactory.get("runBatch")
-                .tasklet((contribution, chunkContext) -> {
-                    logger.warn("The batch has been run");
-                    return RepeatStatus.FINISHED;
-                })
+                .start(explorerStep())
                 .build();
     }
 
