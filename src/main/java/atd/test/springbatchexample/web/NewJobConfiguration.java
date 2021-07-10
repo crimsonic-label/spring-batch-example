@@ -18,8 +18,8 @@ public class NewJobConfiguration {
     private Step explorerStep;
 
     @Bean
-    public Job newJob() {
-        return jobBuilderFactory.get("newJob")
+    public Job examinerJob() {
+        return jobBuilderFactory.get("examinerJob")
                 // incrementer to update run.id parameter,
                 //  parameters should be set before applying to a job
                 .incrementer(new RunIdIncrementer())
