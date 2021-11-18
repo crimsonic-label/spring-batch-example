@@ -1,4 +1,4 @@
-package atd.test.springbatchexample;
+package atd.test.springbatchexample.utils;
 
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;

@@ -1,4 +1,4 @@
-package atd.test.springbatchexample;
+package atd.test.springbatchexample.utils;
 
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;

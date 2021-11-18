@@ -1,4 +1,4 @@
-package atd.test.springbatchexample;
+package atd.test.springbatchexample.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

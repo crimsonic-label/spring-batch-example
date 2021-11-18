@@ -1,4 +1,4 @@
-package atd.test.springbatchexample.schedule;
+package atd.test.springbatchexample.exploring;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class JobScheduler {
+public class ExplorerJobScheduler {
 
     @Autowired
-    private Job examinerJob;
+    private Job explorerJob;
 
     @Autowired
     private JobExplorer jobExplorer;
@@ -24,17 +24,17 @@ public class JobScheduler {
     @Autowired
     private JobLauncher jobLauncher;
 
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 * * * *")
     public void runScheduledJob() {
         log.info("Job scheduled...");
         JobParameters jobParameters = new JobParametersBuilder(jobExplorer)
-                .getNextJobParameters(examinerJob)
+                .getNextJobParameters(explorerJob)
                 .toJobParameters();
 
         try {
-            jobLauncher.run(examinerJob, jobParameters);
+            jobLauncher.run(explorerJob, jobParameters);
         } catch (JobExecutionAlreadyRunningException e) {
-            e.printStackTrace();
+            log.error("Job execution already running", e);
         } catch (JobRestartException e) {
             log.error("Cannot restart job", e);
         } catch (JobInstanceAlreadyCompleteException e) {

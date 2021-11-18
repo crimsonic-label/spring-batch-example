@@ -1,5 +1,6 @@
-package atd.test.springbatchexample;
+package atd.test.springbatchexample.exploring;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
@@ -13,8 +14,8 @@ import org.springframework.batch.repeat.RepeatStatus;
 import java.util.List;
 
 
+@Slf4j
 public class ExploringTasklet implements Tasklet {
-    Logger logger = LoggerFactory.getLogger(ExploringTasklet.class);
     private final JobExplorer jobExplorer;
 
     public ExploringTasklet(JobExplorer jobExplorer) {
@@ -26,7 +27,7 @@ public class ExploringTasklet implements Tasklet {
         String jobName = chunkContext.getStepContext().getJobName();
 
         List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, 0, Integer.MAX_VALUE);
-        logger.info("There are {} job instances for the job {}", jobInstances.size(), jobName);
+        log.info("There are {} job instances for the job {}", jobInstances.size(), jobName);
 
         jobInstances.forEach(this::examineJobInstance);
 
@@ -35,10 +36,10 @@ public class ExploringTasklet implements Tasklet {
 
     private void examineJobInstance(JobInstance jobInstance) {
         List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
-        logger.info("Instance {} had {} executions", jobInstance.getInstanceId(), jobExecutions.size());
+        log.info("Instance {} had {} executions", jobInstance.getInstanceId(), jobExecutions.size());
 
         jobExecutions.forEach(jobExecution ->
-                logger.info("\tExecution {} resulted in exit status {}", jobExecution.getId(),
+                log.info("\tExecution {} resulted in exit status {}", jobExecution.getId(),
                         jobExecution.getExitStatus().getExitCode()));
     }
 }

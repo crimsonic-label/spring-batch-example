@@ -44,3 +44,9 @@ from batch_step_execution s
 inner join batch_job_execution j on s.job_execution_id = j.job_execution_id
 where j.job_execution_id = (select job_execution_id from batch_step_execution order by job_execution_id desc limit 1)
 order by s.step_execution_id desc`
+
+# H2 database
+in file {project_dir}/db/spring_vatch.mv.db
+
+## console
+http://localhost:8080/h2-console
