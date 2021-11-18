@@ -20,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @Slf4j
@@ -46,7 +45,7 @@ public class CsvJobConfiguration {
     }
 
     /**
-     * explorer step ro diplay jobs information
+     * step to read csv flat file and write content to log
      *
      * @return the step
      */
@@ -59,16 +58,12 @@ public class CsvJobConfiguration {
                 .build();
     }
 
-    @Bean
-    @StepScope
-    public ItemWriter<? super FieldSet> fieldSetWriter() {
-        return (ItemWriter<FieldSet>) list -> list
-                .forEach(fieldSet -> {
-                    log.info("row:");
-                    Arrays.stream(fieldSet.getValues()).forEach(value -> log.info("\tvalue: " + value));
-                });
-    }
-
+    /**
+     * csv file reader
+     *
+     * @param inputFile csv input file
+     * @return the item reader
+     */
     @Bean
     @StepScope
     public FlatFileItemReader<FieldSet> csvFileReader(@Value("#{jobParameters['transactionFile']}") String inputFile) {
@@ -78,5 +73,20 @@ public class CsvJobConfiguration {
                 .lineTokenizer(new DelimitedLineTokenizer())
                 .fieldSetMapper(new PassThroughFieldSetMapper())
                 .build();
+    }
+
+    /**
+     * field set writer to log values for every row
+     *
+     * @return the item writer
+     */
+    @Bean
+    @StepScope
+    public ItemWriter<? super FieldSet> fieldSetWriter() {
+        return (ItemWriter<FieldSet>) list -> list
+                .forEach(fieldSet -> {
+                    log.info("row:");
+                    Arrays.stream(fieldSet.getValues()).forEach(value -> log.info("\tvalue: " + value));
+                });
     }
 }

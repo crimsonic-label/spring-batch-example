@@ -50,3 +50,23 @@ in file {project_dir}/db/spring_vatch.mv.db
 
 ## console
 http://localhost:8080/h2-console
+
+---
+## Test csv job
+
+send request:
+
+```
+POST http://localhost:8080/runJob
+Content-Type: application/json
+
+{
+    "name": "transactionJob",
+    "properties": {
+        "transactionFile": "transaction.csv",
+        "summaryFile": "account-summary.csv"
+    }
+}
+```
+
+Search the output csv file in logged directory
