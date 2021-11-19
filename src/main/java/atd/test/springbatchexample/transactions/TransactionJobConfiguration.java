@@ -213,6 +213,7 @@ public class TransactionJobConfiguration {
     @Bean
     public Job transactionJob() throws IOException {
         return jobBuilderFactory.get("transactionJob")
+                // add timestamp parameter to enable restart
                 .incrementer(new DailyJobTimestamper())
                 // 1. read transaction csv file
                 .start(importTransactionFileStep())

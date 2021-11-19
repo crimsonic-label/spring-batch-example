@@ -40,6 +40,10 @@ public class TransactionReader implements ItemStreamReader<TransactionDto> {
      */
     @Override public TransactionDto read()
             throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+        // to test exception handling
+        if(this.recordCount == 25) {
+            throw new ParseException("This isn't what I hoped to happen");
+        }
         // delegate to the field set reader
         return process(fieldSetReader.read());
     }
@@ -58,7 +62,7 @@ public class TransactionReader implements ItemStreamReader<TransactionDto> {
                 recordCount++;
                 return TransactionDto.builder()
                         .accountNumber(fieldSet.readString(0))
-                        .timestamp(fieldSet.readDate(1, "yyyy-MM-DD HH:mm:ss"))
+                        .timestamp(fieldSet.readDate(1, "yyyy-MM-dd HH:mm:ss"))
                         .amount(fieldSet.readBigDecimal(2))
                         .build();
             } else {
