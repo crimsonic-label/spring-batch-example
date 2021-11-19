@@ -1,9 +1,8 @@
 package atd.test.springbatchexample.transactions;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.annotation.AfterStep;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.transform.FieldSet;
 
@@ -22,6 +21,8 @@ public class TransactionReader implements ItemStreamReader<TransactionDto> {
 
     // delegate to FlatFileItemReader, it returns FieldSet because we have two record formats
     private final ItemStreamReader<FieldSet> fieldSetReader;
+    private StepExecution stepExecution;
+
     // counting items  read
     private int recordCount = 0;
     private int expectedRecordCount = 0;
@@ -34,8 +35,8 @@ public class TransactionReader implements ItemStreamReader<TransactionDto> {
      * @return returns TransactionDto or null when everything is read
      * @throws Exception                     from fieldSetReader.read
      * @throws UnexpectedInputException      from fieldSetReader.read
-     * @throws ParseException
-     * @throws NonTransientResourceException
+     * @throws ParseException                from fieldSetReader.read
+     * @throws NonTransientResourceException from fieldSetReader.read
      */
     @Override public TransactionDto read()
             throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
@@ -63,21 +64,23 @@ public class TransactionReader implements ItemStreamReader<TransactionDto> {
             } else {
                 // footer, summary row with the only field: expected records number
                 expectedRecordCount = fieldSet.readInt(0);
+                if (expectedRecordCount != recordCount) {
+                    // sets a flag that tells Spring Batch to end after the step is complete
+                    stepExecution.setTerminateOnly();
+                }
             }
         }
         return null;
     }
 
     /**
-     * called once our step is complete giving us the opportunity to return a specific stopped ExitStatus
+     * assign step execution property used in process method for terminating the step
      *
-     * @param execution
-     * @return normal exit status or stopped when the read ecords count do not match
+     * @param execution the execution
      */
-    @AfterStep
-    public ExitStatus afterStep(StepExecution execution) {
-        // if record read number match the footer number the processing continue
-        return recordCount == expectedRecordCount ? execution.getExitStatus() : ExitStatus.STOPPED;
+    @BeforeStep
+    public void beforeStep(StepExecution execution) {
+        this.stepExecution = execution;
     }
 
     @Override public void open(ExecutionContext executionContext) throws ItemStreamException {
