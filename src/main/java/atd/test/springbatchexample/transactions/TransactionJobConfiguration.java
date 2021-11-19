@@ -216,15 +216,12 @@ public class TransactionJobConfiguration {
                 .incrementer(new DailyJobTimestamper())
                 // 1. read transaction csv file
                 .start(importTransactionFileStep())
-                // restart the job when the record count does not match the number in footer
-                .on("STOPPED").stopAndRestart(importTransactionFileStep())
 
                 // 2. on all other conditions do to apply transaction step
-                .from(importTransactionFileStep()).on("*").to(applyTransactionsStep())
+                .next(applyTransactionsStep())
 
                 // 3. generate new csv with account summary
-                .from(applyTransactionsStep()).next(generateAccountSummaryStep())
-                .end()
+                .next(generateAccountSummaryStep())
                 .build();
     }
 }
