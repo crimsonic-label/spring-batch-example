@@ -1,5 +1,7 @@
-# Spring Batch Example with Spring Boot
+# Spring Batch Example
+Jobs starting via rest service
 
+### Info
 * [Spring Batch](https://docs.spring.io/spring-boot/docs/2.5.1/reference/htmlsingle/#howto-batch-applications)
 
 ### Guides
@@ -8,10 +10,11 @@ The following guides illustrate how to use some features concretely:
 * [Creating a Batch Service](https://spring.io/guides/gs/batch-processing/)
 
 ### Postgresql
+Can be configured for docker with postgres
 
 Run docker on port 5432:
 
-`$ docker run --name postgres -e POSTGRES_PASSWORD=p12345 -d postgres`
+`$ docker run --name postgres -e POSTGRES_PASSWORD=password -d postgres`
 
 `$ docker-commpose up -d`
 
@@ -45,13 +48,15 @@ inner join batch_job_execution j on s.job_execution_id = j.job_execution_id
 where j.job_execution_id = (select job_execution_id from batch_step_execution order by job_execution_id desc limit 1)
 order by s.step_execution_id desc`
 
-# H2 database
-in file {project_dir}/db/spring_vatch.mv.db
+## H2 database
+Can be configured for H2 database in file:
 
-## console
+{project_dir}/db/spring_vatch.mv.db
+
+run console:
+
 http://localhost:8080/h2-console
 
----
 ## Test csv job
 
 send request:
