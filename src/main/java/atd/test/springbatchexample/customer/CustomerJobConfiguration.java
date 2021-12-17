@@ -17,8 +17,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.IOException;
-
 @Configuration
 @Slf4j
 public class CustomerJobConfiguration {
@@ -46,16 +44,14 @@ public class CustomerJobConfiguration {
                         new Range(63, 64),
                         new Range(65, 69)
                 })
-                .names(new String[]{
-                        "firstName",
+                .names("firstName",
                         "middleInitial",
                         "lastName",
                         "addressNumber",
                         "street",
                         "city",
                         "state",
-                        "zipCode"
-                })
+                        "zipCode")
                 .targetType(Customer.class)
                 .build();
     }

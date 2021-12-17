@@ -50,4 +50,23 @@ class StartJobControllerTest {
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("http://localhost:8080/runJob", new HttpEntity<>(payload, headers), String.class);
         assertNotNull(responseEntity.getBody());
     }
+
+    @Test
+    public void shouldRunImportCustomerWithTransactionsJob() {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String payload = """
+                {
+                    "name": "customerWithTransactionsJob",
+                    "properties": {
+                        "customerFile": "customer/customersWithTransactions.txt"
+                    }
+                }""";
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("http://localhost:8080/runJob", new HttpEntity<>(payload, headers), String.class);
+        assertNotNull(responseEntity.getBody());
+    }
 }
