@@ -3,7 +3,6 @@ package atd.test.springbatchexample.customer.with.transactions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.FieldSet;
-import org.springframework.validation.BindException;
 
 @Slf4j
 public class TransactionFieldSetMapper implements FieldSetMapper<Transaction> {

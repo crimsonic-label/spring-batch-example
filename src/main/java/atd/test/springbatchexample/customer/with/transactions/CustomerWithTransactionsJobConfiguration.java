@@ -33,12 +33,18 @@ public class CustomerWithTransactionsJobConfiguration {
 
     @Bean
     @StepScope
-    public FlatFileItemReader customerWithTransactionsItemReader(@Value("#{jobParameters['customerFile']}") ClassPathResource inputFile) {
-        return new FlatFileItemReaderBuilder<Customer>()
-                .name("customerWithTransactionsItemReader")
+    public FlatFileItemReader customerWithTransactionsItemReader(@Value("#{jobParameters['customerFile']}")
+                                                         ClassPathResource inputFile) {
+        return new FlatFileItemReaderBuilder()
+                .name("customerItemReader")
                 .lineMapper(compositeLineTokenizer())
                 .resource(inputFile)
                 .build();
+    }
+
+    @Bean
+    public CustomerFileReader customerFileReader() {
+        return new CustomerFileReader(customerWithTransactionsItemReader(null));
     }
 
     @Bean
@@ -93,7 +99,7 @@ public class CustomerWithTransactionsJobConfiguration {
     public Step importCustomersWithTransactionsStep() {
         return stepBuilderFactory.get("importCustomerWithTransaction")
                 .chunk(100)
-                .reader(customerWithTransactionsItemReader(null))
+                .reader(customerFileReader())
                 .writer(simpleCustomerItemWriter())
                 .build();
     }

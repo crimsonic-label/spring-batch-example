@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
@@ -17,4 +19,5 @@ public class Customer {
     private String city;
     private String state;
     private String zip;
+    private List<Transaction> transactions;
 }
