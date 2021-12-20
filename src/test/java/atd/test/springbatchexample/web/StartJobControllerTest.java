@@ -69,4 +69,23 @@ class StartJobControllerTest {
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("http://localhost:8080/runJob", new HttpEntity<>(payload, headers), String.class);
         assertNotNull(responseEntity.getBody());
     }
+
+    @Test
+    public void shouldRunImportCustomerXmlJob() {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String payload = """
+                {
+                    "name": "xmlCustomerJob",
+                    "properties": {
+                        "customerFile": "customer/customers.xml"
+                    }
+                }""";
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("http://localhost:8080/runJob", new HttpEntity<>(payload, headers), String.class);
+        assertNotNull(responseEntity.getBody());
+    }
 }

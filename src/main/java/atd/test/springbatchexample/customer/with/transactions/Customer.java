@@ -1,16 +1,16 @@
 package atd.test.springbatchexample.customer.with.transactions;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
+import javax.xml.bind.annotation.*;
 import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 @Data
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Customer {
     private String firstName;
     private String middleInitial;
@@ -19,5 +19,8 @@ public class Customer {
     private String city;
     private String state;
     private String zip;
+
+    @XmlElementWrapper(name = "transactions")
+    @XmlElement(name = "transaction")
     private List<Transaction> transactions;
 }
