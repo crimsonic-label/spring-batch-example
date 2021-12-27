@@ -88,4 +88,22 @@ class StartJobControllerTest {
         ResponseEntity<String> responseEntity = restTemplate.postForEntity("http://localhost:8080/runJob", new HttpEntity<>(payload, headers), String.class);
         assertNotNull(responseEntity.getBody());
     }
+
+    @Test
+    public void shouldRunDbCustomerJob() {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String payload = """
+                {
+                    "name": "customerDbJob",
+                    "properties": {
+                    }
+                }""";
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity("http://localhost:8080/runJob", new HttpEntity<>(payload, headers), String.class);
+        assertNotNull(responseEntity.getBody());
+    }
 }

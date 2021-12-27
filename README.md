@@ -73,5 +73,21 @@ Content-Type: application/json
     }
 }
 ```
-
 Search the output csv file in logged directory
+
+### table for input from db reader
+```
+CREATE TABLE CUSTOMER (
+    ID INT PRIMARY KEY,
+    FIRST_NAME VARCHAR(20),
+    MIDDLE_INITIAL VARCHAR(1),
+    LAST_NAME VARCHAR(32),
+    ADDRESS VARCHAR(128),
+    CITY VARCHAR(32),
+    STATE VARCHAR(2),
+    ZIP_CODE VARCHAR(10)
+);
+
+INSERT INTO CUSTOMER VALUES(1, 'Anatol', 'X', 'Bombik', 'ul. Śliska 1', 'Kapućkowo', 'NY', '00-001');
+```
+
