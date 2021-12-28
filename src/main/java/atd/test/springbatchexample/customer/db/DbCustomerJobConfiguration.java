@@ -9,12 +9,18 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
+import org.springframework.batch.item.database.JdbcPagingItemReader;
+import org.springframework.batch.item.database.Order;
+import org.springframework.batch.item.database.PagingQueryProvider;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
+import org.springframework.batch.item.database.support.H2PagingQueryProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
+import java.util.Map;
 
 @Configuration
 @Slf4j
@@ -34,6 +40,27 @@ public class DbCustomerJobConfiguration {
                 .build();
     }
 
+    @Bean
+    @StepScope
+    public JdbcPagingItemReader<CustomerEntity> jdbcPagingItemReader(DataSource dataSource) {
+        return new JdbcPagingItemReaderBuilder<CustomerEntity>()
+                .name("customerItemReader")
+                .dataSource(dataSource)
+                .queryProvider(pagingQueryProvider())
+                .pageSize(10)
+                .rowMapper(new CustomerRowMapper())
+                .build();
+    }
+
+    @Bean
+    public PagingQueryProvider pagingQueryProvider() {
+        H2PagingQueryProvider h2PagingQueryProvider = new H2PagingQueryProvider();
+        h2PagingQueryProvider.setSelectClause("select *");
+        h2PagingQueryProvider.setFromClause("from customer");
+        h2PagingQueryProvider.setSortKeys(Map.of("id", Order.ASCENDING));
+        return h2PagingQueryProvider;
+    }
+
     /**
      * job importing customers from flat file - fixed length columns
      *
@@ -51,7 +78,7 @@ public class DbCustomerJobConfiguration {
     public Step importDbCustomerStep() {
         return stepBuilderFactory.get("importDbCustomer")
                 .chunk(100)
-                .reader(customerJdbcItemReader(null))
+                .reader(jdbcPagingItemReader(null))
                 .writer(dbCustomerItemWriter())
                 .build();
     }

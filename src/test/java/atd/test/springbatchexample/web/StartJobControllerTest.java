@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class StartJobControllerTest {
@@ -103,7 +104,9 @@ class StartJobControllerTest {
                     }
                 }""";
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity("http://localhost:8080/runJob", new HttpEntity<>(payload, headers), String.class);
-        assertNotNull(responseEntity.getBody());
+        ResponseEntity<ExitStatus> responseEntity = restTemplate.postForEntity("http://localhost:8080/runJob", new HttpEntity<>(payload, headers), ExitStatus.class);
+        ExitStatus exitStatus = responseEntity.getBody();
+        assertNotNull(exitStatus);
+        assertEquals(org.springframework.batch.core.ExitStatus.COMPLETED.getExitCode(), exitStatus.getExitCode());
     }
 }
