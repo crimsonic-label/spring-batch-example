@@ -109,4 +109,24 @@ class StartJobControllerTest {
         assertNotNull(exitStatus);
         assertEquals(org.springframework.batch.core.ExitStatus.COMPLETED.getExitCode(), exitStatus.getExitCode());
     }
+
+    @Test
+    public void shouldRunServiceAdapterCustomerJob() {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String payload = """
+                {
+                    "name": "adapterCustomerJob",
+                    "properties": {
+                    }
+                }""";
+
+        ResponseEntity<ExitStatus> responseEntity = restTemplate.postForEntity("http://localhost:8080/runJob", new HttpEntity<>(payload, headers), ExitStatus.class);
+        ExitStatus exitStatus = responseEntity.getBody();
+        assertNotNull(exitStatus);
+        assertEquals(org.springframework.batch.core.ExitStatus.COMPLETED.getExitCode(), exitStatus.getExitCode());
+    }
 }

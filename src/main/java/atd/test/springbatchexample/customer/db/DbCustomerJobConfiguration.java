@@ -90,7 +90,7 @@ public class DbCustomerJobConfiguration {
     @Bean
     public Step importDbCustomerStep() {
         return stepBuilderFactory.get("importDbCustomer")
-                .chunk(100)
+                .chunk(10)
                 .reader(repositoryCustomerItemReader(null))
                 .writer(dbCustomerItemWriter())
                 .build();
