@@ -8,6 +8,8 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.data.RepositoryItemReader;
+import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
@@ -18,6 +20,7 @@ import org.springframework.batch.item.database.support.H2PagingQueryProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.Sort;
 
 import javax.sql.DataSource;
 import java.util.Map;
@@ -53,6 +56,16 @@ public class DbCustomerJobConfiguration {
     }
 
     @Bean
+    public RepositoryItemReader<CustomerEntity> repositoryCustomerItemReader(CustomerRepository repository) {
+        return new RepositoryItemReaderBuilder<CustomerEntity>()
+                .name("customerItemReader")
+                .repository(repository)
+                .sorts(Map.of("id", Sort.Direction.ASC))
+                .methodName("findAll")
+                .build();
+    }
+
+    @Bean
     public PagingQueryProvider pagingQueryProvider() {
         H2PagingQueryProvider h2PagingQueryProvider = new H2PagingQueryProvider();
         h2PagingQueryProvider.setSelectClause("select *");
@@ -78,7 +91,7 @@ public class DbCustomerJobConfiguration {
     public Step importDbCustomerStep() {
         return stepBuilderFactory.get("importDbCustomer")
                 .chunk(100)
-                .reader(jdbcPagingItemReader(null))
+                .reader(repositoryCustomerItemReader(null))
                 .writer(dbCustomerItemWriter())
                 .build();
     }
